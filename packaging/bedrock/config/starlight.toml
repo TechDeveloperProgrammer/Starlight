@@ -1,0 +1,62 @@
+# Starlight Core Configuration
+# Bridge bidireccional Minecraft Java Edition ↔ Bedrock Edition
+
+[general]
+# Versión del protocolo Java soportada
+java_protocol_version = 763
+# Versión del protocolo Bedrock soportada
+bedrock_protocol_version = 622
+# Modo de operación: "proxy", "standalone", "library"
+mode = "proxy"
+# Nivel de log: "error", "warn", "info", "debug", "trace"
+log_level = "info"
+
+[network]
+# Puerto de escucha para clientes Java
+java_bind_port = 25565
+# Puerto de escucha para clientes Bedrock
+bedrock_bind_port = 19132
+# Dirección del servidor Java remoto (si mode = "proxy")
+java_remote_address = "127.0.0.1"
+java_remote_port = 25566
+
+[translation]
+# Habilitar traducción de entidades
+enable_entity_translation = true
+# Habilitar traducción de ítems
+enable_item_translation = true
+# Habilitar traducción de bloques
+enable_block_translation = true
+# Habilitar traducción de NBT
+enable_nbt_translation = true
+# Habilitar traducción de chunks
+enable_chunk_translation = true
+# Modo de fallback para características no soportadas: "ignore", "warn", "error"
+fallback_mode = "warn"
+
+[performance]
+# Número de hilos para procesamiento
+worker_threads = 4
+# Tamaño del buffer de paquetes
+packet_buffer_size = 4096
+# Habilitar compresión
+enable_compression = true
+# Nivel de compresión (1-9)
+compression_level = 6
+
+[metrics]
+# Habilitar métricas de rendimiento
+enable_metrics = true
+# Intervalo de reporte en segundos
+metrics_interval = 60
+# Habilitar Prometheus endpoint
+enable_prometheus = false
+prometheus_port = 9090
+
+[security]
+# Habilitar validación estricta de paquetes
+strict_packet_validation = true
+# Timeout de conexión en segundos
+connection_timeout = 30
+# Máximo de intentos de reconexión
+max_reconnect_attempts = 3

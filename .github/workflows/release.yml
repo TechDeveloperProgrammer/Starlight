@@ -1,0 +1,142 @@
+name: Release Packages
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  publish-java-packages:
+    name: Publish Java Packages to GitHub Packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Publish Java packages
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd java
+          ./gradlew publish --no-daemon \
+            -PreleaseVersion=${GITHUB_REF_NAME#v}
+
+  build-rust-core:
+    name: Build Rust Core
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        run: |
+          rustup update stable
+          rustup default stable
+
+      - name: Test Rust
+        run: cargo test --all-features
+
+      - name: Build Rust release
+        run: cargo build --release --all-features
+
+      - name: Upload Rust artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: starlight-rust-artifacts
+          path: |
+            target/release/*.so
+            target/release/*.a
+            target/release/starlight*
+
+  package-bedrock:
+    name: Package Bedrock Adapter
+    runs-on: ubuntu-latest
+    needs: build-rust-core
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Rust artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: starlight-rust-artifacts
+          path: rust-artifacts
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build g++ zip
+
+      - name: Configure C++
+        run: |
+          cmake -S cpp -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DSTARLIGHT_VERSION=${GITHUB_REF_NAME#v}
+
+      - name: Build C++
+        run: |
+          cmake --build build -j
+
+      - name: Test C++
+        run: |
+          ctest --test-dir build --output-on-failure
+
+      - name: Create Bedrock package
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          PACKAGE_NAME=starlight-bedrock-adapter-$VERSION-linux-x64
+          mkdir -p dist/$PACKAGE_NAME/bin
+          mkdir -p dist/$PACKAGE_NAME/lib
+          mkdir -p dist/$PACKAGE_NAME/config
+          mkdir -p dist/$PACKAGE_NAME/docs
+          
+          cp build/bin/starlight_bedrock_adapter dist/$PACKAGE_NAME/bin/ || true
+          cp build/lib/libstarlight_bedrock_adapter.so dist/$PACKAGE_NAME/lib/ || true
+          cp rust-artifacts/*.so dist/$PACKAGE_NAME/lib/ || true
+          cp packaging/bedrock/config/starlight.toml dist/$PACKAGE_NAME/config/ || true
+          cp packaging/bedrock/manifest.json dist/$PACKAGE_NAME/ || true
+          cp README.md dist/$PACKAGE_NAME/docs/ || true
+          
+          cd dist
+          zip -r ../$PACKAGE_NAME.zip $PACKAGE_NAME
+          cd ..
+          
+          sha256sum $PACKAGE_NAME.zip > $PACKAGE_NAME.zip.sha256
+
+      - name: Create optional Bedrock mcpack
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          MCPACK_NAME=starlight-bedrock-addon-$VERSION.mcpack
+          mkdir -p mcpack_out
+          cp -r packaging/bedrock/mcpack/. mcpack_out/ || true
+          cp packaging/bedrock/manifest.json mcpack_out/ || true
+          
+          cd mcpack_out
+          zip -r ../$MCPACK_NAME .
+          cd ..
+          
+          sha256sum $MCPACK_NAME > $MCPACK_NAME.sha256
+
+      - name: Upload Bedrock artifacts to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            starlight-bedrock-adapter-*.zip
+            starlight-bedrock-adapter-*.zip.sha256
+            starlight-bedrock-addon-*.mcpack
+            starlight-bedrock-addon-*.mcpack.sha256
