@@ -1,49 +1,80 @@
 ```
-# Dependencies
-.gradle/
-node_modules/
-
-# Build artifacts
-build/
-dist/
+# Rust/Cargo specific
 target/
+Cargo.lock
+*.rs.bk
+*.rmeta
 
-# Environment
+# Dependencies
+**/node_modules/
+**/.venv/
+**/venv/
+**/__pycache__/
+**/.mypy_cache/
+**/.pytest_cache/
+**/.gradle/
+**/build/
+
+# Compiled/Binary files
+*.pyc
+*.class
+*.o
+*.exe
+*.dll
+*.so
+*.a
+*.obj
+*.out
+*.dylib
+*.jar
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Environment files
 .env
 .env.local
 *.env.*
 
-# Editors
+# Editors/IDE
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# Logs
-*.log
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-.venv/
-.ENV
-.python-version
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-.git/modules/
-*.tmproj
-*.lck
+# System files
 .DS_Store
 Thumbs.db
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Compressed files
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
 ```
